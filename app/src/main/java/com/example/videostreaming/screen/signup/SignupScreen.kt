@@ -1,11 +1,10 @@
-package com.example.videostreaming.screen.login
+package com.example.videostreaming.screen.signup
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -31,24 +31,24 @@ import com.example.videostreaming.R
 import com.example.videostreaming.screen.component.CustomButton
 import com.example.videostreaming.screen.component.CustomTextButton
 import com.example.videostreaming.screen.component.CustomTextField
-import com.example.videostreaming.ui.theme.LightGray
+import com.example.videostreaming.ui.theme.Black
 import com.example.videostreaming.ui.theme.VideoStreamingTheme
 
 @Composable
-fun LoginScreen(modifier: Modifier = Modifier) {
+fun SignupScreen(modifier: Modifier = Modifier) {
+    val name = remember { mutableStateOf("") }
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
+    val confirmPassword = remember { mutableStateOf("") }
 
     Scaffold(modifier = modifier) { innerPadding ->
-
         Box(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(innerPadding)
-                .background(color = Color.Black),
+                .fillMaxSize()
+                .background(color = Black),
             contentAlignment = Alignment.Center
         ) {
-
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top,
@@ -56,19 +56,26 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                     .fillMaxSize()
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.image1), // Replace with your image resource
+                    painter = painterResource(id = R.drawable.image2),
                     contentDescription = "Header Image",
                     modifier = Modifier
                         .fillMaxWidth(),
-                    contentScale = ContentScale.Crop// Adjust the height as needed
+                    contentScale = ContentScale.Crop
                 )
-
                 Text(
-                    text = "Welcome Back",
+                    text = "Sign up",
                     style = MaterialTheme.typography.displayLarge,
                     color = Color.White // Assuming you want the text to be white
                 )
                 Spacer(modifier = Modifier.height(24.dp))
+                CustomTextField(
+                    value = name.value,
+                    onValueChange = { name.value = it },
+                    label = "Name",
+                    hint = "Name",
+                    icon = Icons.Filled.Person
+                )
+                Spacer(modifier = Modifier.height(16.dp))
                 CustomTextField(
                     value = email.value,
                     onValueChange = { email.value = it },
@@ -85,46 +92,42 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                     icon = Icons.Filled.Lock
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(0.8f),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text(
-                        text = "Forget Password",
-                        color = LightGray,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                }
+                CustomTextField(
+                    value = confirmPassword.value,
+                    onValueChange = { confirmPassword.value = it },
+                    label = "Confirm Password",
+                    hint = "Confirm Password",
+                    icon = Icons.Filled.Lock
+                )
                 Spacer(modifier = Modifier.height(24.dp))
 
                 CustomButton(
-                    textToDisplay = "Sign in",
+                    textToDisplay = "Sign up",
                     onClick = { /*TODO*/ }
                 )
                 Spacer(modifier = Modifier.height(5.dp))
 
                 CustomTextButton(
-                    firstText = "Don't you have an account?",
-                    secondText = "Sign up",
+                    firstText = "Already have an account?",
+                    secondText = "Log in",
                     onClick = { /*TODO*/ }
                 )
 
-                Spacer(modifier = Modifier.height(50.dp))
+
             }
+
         }
     }
 }
-
 
 @Preview(
     showBackground = true,
     showSystemUi = true
 )
 @Composable
-fun LoginScreenPreview() {
+fun SignupScreenPreview() {
     VideoStreamingTheme {
-        LoginScreen()
+        SignupScreen()
     }
+
 }
