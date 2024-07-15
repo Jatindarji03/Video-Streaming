@@ -18,6 +18,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -27,6 +29,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.videostreaming.R
 import com.example.videostreaming.screen.component.CustomButton
 import com.example.videostreaming.screen.component.CustomTextButton
@@ -35,7 +38,8 @@ import com.example.videostreaming.ui.theme.Black
 import com.example.videostreaming.ui.theme.VideoStreamingTheme
 
 @Composable
-fun SignupScreen(modifier: Modifier = Modifier) {
+fun SignupScreen(signupViewModel: SignupViewModel = viewModel(), modifier: Modifier = Modifier) {
+    val signupData by signupViewModel.authData.collectAsState()
     val name = remember { mutableStateOf("") }
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
@@ -52,14 +56,12 @@ fun SignupScreen(modifier: Modifier = Modifier) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top,
-                modifier = Modifier
-                    .fillMaxSize()
+                modifier = Modifier.fillMaxSize()
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.image2),
                     contentDescription = "Header Image",
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     contentScale = ContentScale.Crop
                 )
                 Text(
@@ -69,49 +71,50 @@ fun SignupScreen(modifier: Modifier = Modifier) {
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 CustomTextField(
-                    value = name.value,
-                    onValueChange = { name.value = it },
+                    value = signupData.name.orEmpty(),
+                    onValueChange = { signupViewModel.updateSignupData(signupData.copy(name = it)) },
                     label = "Name",
                     hint = "Name",
                     icon = Icons.Filled.Person
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 CustomTextField(
-                    value = email.value,
-                    onValueChange = { email.value = it },
+                    value = signupData.email.orEmpty(),
+                    onValueChange = { signupViewModel.updateSignupData(signupData.copy(email = it)) },
                     label = "Email",
                     hint = "Email",
                     icon = Icons.Filled.Email
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 CustomTextField(
-                    value = password.value,
-                    onValueChange = { password.value = it },
+                    value = signupData.password.orEmpty(),
+                    onValueChange = { signupViewModel.updateSignupData(signupData.copy(password = it)) },
                     label = "Password",
                     hint = "Password",
                     icon = Icons.Filled.Lock
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 CustomTextField(
-                    value = confirmPassword.value,
-                    onValueChange = { confirmPassword.value = it },
+                    value = signupData.confirmPassword.orEmpty(),
+                    onValueChange = {
+                        signupViewModel.updateSignupData(
+                            signupData.copy(
+                                confirmPassword = it
+                            )
+                        )
+                    },
                     label = "Confirm Password",
                     hint = "Confirm Password",
                     icon = Icons.Filled.Lock
                 )
                 Spacer(modifier = Modifier.height(24.dp))
 
-                CustomButton(
-                    textToDisplay = "Sign up",
-                    onClick = { /*TODO*/ }
-                )
+                CustomButton(textToDisplay = "Sign up", onClick = { /*TODO*/ })
                 Spacer(modifier = Modifier.height(5.dp))
 
-                CustomTextButton(
-                    firstText = "Already have an account?",
+                CustomTextButton(firstText = "Already have an account?",
                     secondText = "Log in",
-                    onClick = { /*TODO*/ }
-                )
+                    onClick = { /*TODO*/ })
 
 
             }
@@ -121,8 +124,7 @@ fun SignupScreen(modifier: Modifier = Modifier) {
 }
 
 @Preview(
-    showBackground = true,
-    showSystemUi = true
+    showBackground = true, showSystemUi = true
 )
 @Composable
 fun SignupScreenPreview() {
