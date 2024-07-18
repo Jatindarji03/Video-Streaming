@@ -1,5 +1,8 @@
 package com.example.videostreaming.screen.login
 
+
+import android.util.Patterns
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -18,16 +21,20 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.videostreaming.R
+import com.example.videostreaming.route.Route
 import com.example.videostreaming.screen.component.CustomButton
 import com.example.videostreaming.screen.component.CustomTextButton
 import com.example.videostreaming.screen.component.CustomTextField
@@ -35,9 +42,14 @@ import com.example.videostreaming.ui.theme.LightGray
 import com.example.videostreaming.ui.theme.VideoStreamingTheme
 
 @Composable
-fun LoginScreen(modifier: Modifier = Modifier) {
-    val email = remember { mutableStateOf("") }
-    val password = remember { mutableStateOf("") }
+fun LoginScreen(navController: NavController=NavController(LocalContext.current), modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+
+    val loginViewModel: LoginViewModel = viewModel()
+    val loginData by loginViewModel.authData.collectAsState()
+    val loginResult by loginViewModel.loginResult.collectAsState()
+
+
 
     Scaffold(modifier = modifier) { innerPadding ->
 
@@ -66,20 +78,20 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                 Text(
                     text = "Welcome Back",
                     style = MaterialTheme.typography.displayLarge,
-                    color = Color.White // Assuming you want the text to be white
+                    color = Color.White
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 CustomTextField(
-                    value = email.value,
-                    onValueChange = { email.value = it },
+                    value = loginData.email,
+                    onValueChange = { loginViewModel.updateLoginData(loginData.copy(email = it)) },
                     label = "Email",
                     hint = "Email",
                     icon = Icons.Filled.Email
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 CustomTextField(
-                    value = password.value,
-                    onValueChange = { password.value = it },
+                    value = loginData.password,
+                    onValueChange = { loginViewModel.updateLoginData(loginData.copy(password = it)) },
                     label = "Password",
                     hint = "Password",
                     icon = Icons.Filled.Lock
@@ -101,17 +113,54 @@ fun LoginScreen(modifier: Modifier = Modifier) {
 
                 CustomButton(
                     textToDisplay = "Sign in",
-                    onClick = { /*TODO*/ }
+                    onClick = {
+                        if (loginData.email.isEmpty()) {
+                            Toast.makeText(context, "Please enter email", Toast.LENGTH_SHORT).show()
+                        }else if(!Patterns.EMAIL_ADDRESS.matcher(loginData.email).matches()){
+                            Toast.makeText(context, "Please enter valid email", Toast.LENGTH_SHORT).show()
+                        } else if (loginData.password.isEmpty()) {
+                            Toast.makeText(context, "Please enter password", Toast.LENGTH_SHORT)
+                                .show()
+                        }else {
+                            loginViewModel.login() // Trigger login process
+                        }
+
+                    }
                 )
                 Spacer(modifier = Modifier.height(5.dp))
 
                 CustomTextButton(
                     firstText = "Don't you have an account?",
                     secondText = "Sign up",
-                    onClick = { /*TODO*/ }
+                    onClick = {
+                        navController.navigate(Route.Signup.name)
+                    }
                 )
 
+
                 Spacer(modifier = Modifier.height(50.dp))
+                // Display validation error only if sign-in button has been clicked
+
+                // Success or Failure Message
+                loginResult?.let {
+                    when {
+                        it.isSuccess -> {
+                            Toast.makeText(
+                                context,
+                                it.getOrNull() ?: "Login Successful",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            navController.navigate(Route.Home.name)
+                        }
+                        it.isFailure -> {
+                            Toast.makeText(
+                                context,
+                                it.exceptionOrNull()?.message ?: "Login Failed",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
             }
         }
     }
@@ -124,7 +173,7 @@ fun LoginScreen(modifier: Modifier = Modifier) {
 )
 @Composable
 fun LoginScreenPreview() {
-    VideoStreamingTheme {
-        LoginScreen()
-    }
+   VideoStreamingTheme {
+       LoginScreen()
+   }
 }

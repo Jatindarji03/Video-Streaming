@@ -1,5 +1,7 @@
 package com.example.videostreaming.screen.signup
 
+import android.util.Patterns
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,17 +22,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.videostreaming.R
+import com.example.videostreaming.route.Route
 import com.example.videostreaming.screen.component.CustomButton
 import com.example.videostreaming.screen.component.CustomTextButton
 import com.example.videostreaming.screen.component.CustomTextField
@@ -38,12 +41,16 @@ import com.example.videostreaming.ui.theme.Black
 import com.example.videostreaming.ui.theme.VideoStreamingTheme
 
 @Composable
-fun SignupScreen(signupViewModel: SignupViewModel = viewModel(), modifier: Modifier = Modifier) {
+fun SignupScreen(
+    navController: NavController = NavController(LocalContext.current),
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val signupViewModel: SignupViewModel = viewModel()
     val signupData by signupViewModel.authData.collectAsState()
-    val name = remember { mutableStateOf("") }
-    val email = remember { mutableStateOf("") }
-    val password = remember { mutableStateOf("") }
-    val confirmPassword = remember { mutableStateOf("") }
+
+    val signupResult by signupViewModel.signupResult.collectAsState()
+
 
     Scaffold(modifier = modifier) { innerPadding ->
         Box(
@@ -53,6 +60,7 @@ fun SignupScreen(signupViewModel: SignupViewModel = viewModel(), modifier: Modif
                 .background(color = Black),
             contentAlignment = Alignment.Center
         ) {
+
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top,
@@ -67,7 +75,7 @@ fun SignupScreen(signupViewModel: SignupViewModel = viewModel(), modifier: Modif
                 Text(
                     text = "Sign up",
                     style = MaterialTheme.typography.displayLarge,
-                    color = Color.White // Assuming you want the text to be white
+                    color = Color.White
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 CustomTextField(
@@ -79,7 +87,7 @@ fun SignupScreen(signupViewModel: SignupViewModel = viewModel(), modifier: Modif
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 CustomTextField(
-                    value = signupData.email.orEmpty(),
+                    value = signupData.email,
                     onValueChange = { signupViewModel.updateSignupData(signupData.copy(email = it)) },
                     label = "Email",
                     hint = "Email",
@@ -87,7 +95,7 @@ fun SignupScreen(signupViewModel: SignupViewModel = viewModel(), modifier: Modif
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 CustomTextField(
-                    value = signupData.password.orEmpty(),
+                    value = signupData.password,
                     onValueChange = { signupViewModel.updateSignupData(signupData.copy(password = it)) },
                     label = "Password",
                     hint = "Password",
@@ -109,14 +117,58 @@ fun SignupScreen(signupViewModel: SignupViewModel = viewModel(), modifier: Modif
                 )
                 Spacer(modifier = Modifier.height(24.dp))
 
-                CustomButton(textToDisplay = "Sign up", onClick = { /*TODO*/ })
+                CustomButton(
+                    textToDisplay = "Sign up",
+                    onClick = {
+                        if (signupData.email.isEmpty()) {
+                            Toast.makeText(context, "Please enter email", Toast.LENGTH_SHORT).show()
+                        } else if (Patterns.EMAIL_ADDRESS.matcher(signupData.email).matches()) {
+                            Toast.makeText(context, "Please enter valid email", Toast.LENGTH_SHORT)
+                                .show()
+                        } else if (signupData.name.isNullOrEmpty()) {
+                            Toast.makeText(context, "Please enter name", Toast.LENGTH_SHORT).show()
+                        } else if (signupData.password.isEmpty()) {
+                            Toast.makeText(context, "Please enter password", Toast.LENGTH_SHORT)
+                                .show()
+                        } else if (signupData.confirmPassword.isNullOrEmpty()) {
+                            Toast.makeText(
+                                context,
+                                "Please enter confirm password",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else if (signupData.password != signupData.confirmPassword) {
+                            Toast.makeText(
+                                context,
+                                "Password and confirm password does not match",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            signupViewModel.signup()
+                        }
+                    }
+                )
                 Spacer(modifier = Modifier.height(5.dp))
 
                 CustomTextButton(firstText = "Already have an account?",
                     secondText = "Log in",
-                    onClick = { /*TODO*/ })
+                    onClick = {
+                        navController.navigate(Route.Login.name)
+                    }
+                )
 
 
+            }
+            signupResult?.let { result ->
+                when {
+                    result.isSuccess -> {
+                        Toast.makeText(context, result.getOrNull(), Toast.LENGTH_SHORT).show()
+                        navController.navigate(Route.Login.name)
+                    }
+
+                    result.isFailure -> {
+                        Toast.makeText(context, result.getOrNull(), Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
 
         }
