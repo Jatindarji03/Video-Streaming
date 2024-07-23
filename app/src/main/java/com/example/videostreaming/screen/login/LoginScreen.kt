@@ -150,7 +150,7 @@ fun LoginScreen(navController: NavController=NavController(LocalContext.current)
                                 it.getOrNull() ?: "Login Successful",
                                 Toast.LENGTH_SHORT
                             ).show()
-                            navController.navigate(Route.Home.name)
+                            navController.navigate(Route.Main.name)
                         }
                         it.isFailure -> {
                             Toast.makeText(
