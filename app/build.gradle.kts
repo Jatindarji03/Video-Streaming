@@ -71,4 +71,13 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation ("androidx.navigation:navigation-compose:2.5.3")
 
+
+    //RetroFit API
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    //Load Image
+    implementation("io.coil-kt:coil-compose:2.2.2")
+
+
 }
