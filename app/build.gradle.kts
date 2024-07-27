@@ -79,5 +79,8 @@ dependencies {
     //Load Image
     implementation("io.coil-kt:coil-compose:2.2.2")
 
+    //Volley API
+    implementation ("com.android.volley:volley:1.2.1")
+
 
 }

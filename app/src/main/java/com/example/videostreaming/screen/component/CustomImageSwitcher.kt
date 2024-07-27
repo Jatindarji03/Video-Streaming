@@ -1,7 +1,7 @@
 package com.example.videostreaming.screen.component
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,36 +27,33 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.example.videostreaming.R
+import coil.compose.AsyncImage
+import com.example.videostreaming.screen.model.Content
 import com.example.videostreaming.ui.theme.Blue
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun CustomImageSwitcher(contentType: String, modifier: Modifier = Modifier) {
-    val image = listOf(
-        R.drawable.hotd,
-        R.drawable.demonslayer,
-        R.drawable.interstellar
-    )
+fun CustomImageSwitcher(
+    contentList: List<Content>,
+    modifier: Modifier = Modifier
+) {
     val pagerState = rememberPagerState {
-        image.size
+        contentList.size
     }
 
     HorizontalPager(modifier = modifier, state = pagerState) {
-
-
+        val content = contentList[it]
         Card(
             modifier = Modifier
                 .padding(16.dp),
             shape = RoundedCornerShape(16.dp)
         ) {
             Box(modifier = Modifier.height(400.dp)) {
-                Image(
+                AsyncImage(
                     modifier = Modifier
                         .fillMaxSize(),
-                    painter = painterResource(id = image[it]),
+                    model = content.imageUrl,
                     contentDescription = null,
                     contentScale = ContentScale.Crop
                 )
@@ -84,7 +81,7 @@ fun CustomImageSwitcher(contentType: String, modifier: Modifier = Modifier) {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "House Of The Dragon",
+                            text = content.title,
                             color = Color.White,
                             style = MaterialTheme.typography.headlineLarge,
                             modifier = Modifier.padding(bottom = 20.dp)
