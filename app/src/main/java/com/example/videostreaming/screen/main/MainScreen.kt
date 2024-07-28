@@ -38,6 +38,7 @@ import com.example.videostreaming.ui.theme.Black
 import com.example.videostreaming.ui.theme.Blue
 import com.example.videostreaming.ui.theme.DarkGray
 import com.example.videostreaming.ui.theme.Gray
+import com.example.videostreaming.ui.theme.LightWhite
 import com.example.videostreaming.ui.theme.VideoStreamingTheme
 
 data class BottomNavigationItem(
@@ -144,9 +145,9 @@ fun RowScope.AddItem(
         },
         colors = NavigationBarItemDefaults.colors(
             selectedTextColor = Blue,
-            unselectedTextColor = Gray,
+            unselectedTextColor = LightWhite,
             selectedIconColor = Blue,
-            unselectedIconColor = DarkGray,
+            unselectedIconColor = LightWhite,
             indicatorColor = DarkGray
         )
     )

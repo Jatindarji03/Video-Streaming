@@ -41,7 +41,6 @@ fun CustomImageSwitcher(
     val pagerState = rememberPagerState {
         contentList.size
     }
-
     HorizontalPager(modifier = modifier, state = pagerState) {
         val content = contentList[it]
         Card(
@@ -53,7 +52,7 @@ fun CustomImageSwitcher(
                 AsyncImage(
                     modifier = Modifier
                         .fillMaxSize(),
-                    model = content.imageUrl,
+                    model = content.image,
                     contentDescription = null,
                     contentScale = ContentScale.Crop
                 )

@@ -45,7 +45,7 @@ fun HomeScreen(modifier: Modifier = Modifier) {
             Text(
                 text = "Let's Help You Relax & Watch a Series",
                 color = Color.White,
-                style = MaterialTheme.typography.displayMedium,
+                style = MaterialTheme.typography.displaySmall,
                 modifier = Modifier.padding(top = 10.dp, end = 20.dp, start = 15.dp)
             )
             ChipSection(chips = items, onChipSelected = { selectedChipIndex = it })
