@@ -2,22 +2,40 @@ package com.example.videostreaming.screen.anime
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.android.volley.Request
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
+import com.example.videostreaming.R
 
 import com.example.videostreaming.screen.component.CustomImageSwitcher
 import com.example.videostreaming.screen.model.Content
@@ -29,6 +47,7 @@ import org.json.JSONException
 fun AnimeScreen(modifier: Modifier = Modifier) {
     val context: Context = LocalContext.current
     var animeList by remember { mutableStateOf<List<Content>>(emptyList()) }
+    var state= rememberScrollState()
     LaunchedEffect(Unit) {
         fetchAnimeData(context) {
             animeList = it
@@ -37,10 +56,67 @@ fun AnimeScreen(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Black),
+            .background(Black)
+            .verticalScroll(state),
 
         ) {
         CustomImageSwitcher(animeList)
+        Text(
+            text = "Top Airing \uD83D\uDD25",
+            color = Color.White,
+            modifier = Modifier.padding(start = 16.dp, bottom = 16.dp),
+            style = MaterialTheme.typography.headlineLarge
+        )
+        TopAiringCard()
+
+    }
+}
+
+@Composable
+fun TopAiringCard(modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.padding(start = 16.dp),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .height(230.dp)
+                .width(175.dp)
+        ) {
+            Image(
+                modifier = Modifier.fillMaxSize(),
+                painter = painterResource(id = R.drawable.demonslayer),
+                contentDescription = null,
+                contentScale = ContentScale.Crop
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black
+                            ),
+                            startY = 300f
+                        )
+                    )
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp),
+                contentAlignment = Alignment.BottomStart
+            ) {
+                Text(
+                    text = "Demon Slayer",
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+
+
+        }
 
     }
 }
@@ -66,8 +142,7 @@ fun fetchAnimeData(context: Context, onResult: (List<Content>) -> Unit) {
         }
     }, { error ->
         Log.d("data", "error: ${error.message}")
-    }
-    )
+    })
     requestQueue.add(jsonObjectRequest)
 }
 

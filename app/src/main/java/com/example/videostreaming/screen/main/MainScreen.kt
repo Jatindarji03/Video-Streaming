@@ -4,9 +4,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
@@ -79,8 +81,8 @@ fun BottomBar(navController: NavHostController) {
         BottomNavigationItem(
             "Favourites",
             Route.Favourites.name,
-            Icons.Filled.Home,
-            Icons.Outlined.Home
+            Icons.Filled.Favorite,
+            Icons.Outlined.FavoriteBorder
         ),
         BottomNavigationItem(
             "Search",

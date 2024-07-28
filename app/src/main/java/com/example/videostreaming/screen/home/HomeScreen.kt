@@ -24,8 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.videostreaming.screen.anime.AnimeScreen
-import com.example.videostreaming.screen.movie.MovieScreen
-import com.example.videostreaming.screen.series.SeriesScreen
+import com.example.videostreaming.screen.comingsoon.ComingSoonScreen
 import com.example.videostreaming.ui.theme.Black
 import com.example.videostreaming.ui.theme.Blue
 import com.example.videostreaming.ui.theme.Gray
@@ -34,7 +33,7 @@ import com.example.videostreaming.ui.theme.VideoStreamingTheme
 
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier) {
-    val items = listOf("Movies", "Series", "Anime")
+    val items = listOf("Anime", "Coming Soon")
     var selectedChipIndex by rememberSaveable {
         mutableIntStateOf(0)
     }
@@ -52,9 +51,8 @@ fun HomeScreen(modifier: Modifier = Modifier) {
             ChipSection(chips = items, onChipSelected = { selectedChipIndex = it })
 
             when (selectedChipIndex) {
-                0 -> MovieScreen()
-                1 -> SeriesScreen()
-                2 -> AnimeScreen()
+                0 -> AnimeScreen()
+                1 -> ComingSoonScreen()
             }
         }
 
