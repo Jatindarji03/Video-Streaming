@@ -21,6 +21,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -32,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -56,7 +60,7 @@ fun ContentInfoScreen(modifier: Modifier = Modifier) {
         modifier = modifier
             .background(Black)
             .fillMaxSize()
-            .verticalScroll(state)
+            .verticalScroll(state),
     ) {
         MovieImageCard()
         Row(
@@ -70,11 +74,53 @@ fun ContentInfoScreen(modifier: Modifier = Modifier) {
         }
         SubOrDub(text = "Dub")
         ContentInformation(information = "In 2067, humanity faces extinction due to a global blight. Joseph Cooper, a former NASA test pilot, along with his son and daughter, Tom and Murph, and father-in-law Donald, toil as farmers. One evening during a dust storm, Cooper and Murph discover mysterious patterns in falling particles. Decoding the patterns leads them to a secret NASA facility run by scientist Dr. John Brand. Cooper is enlisted to pilot the spaceship Endurance through a newly-discovered wormhole near Saturn, searching for habitable planets. Cooper struggles with leaving his children behind but decides to do it in the hope of saving Tom and Murph's generation from extinction. He promises Murph he will return, but she is distraught. Cooper joins the Endurance team, consisting of Romilly, Doyle, Brand's daughter Amelia, and the robots TARS and CASE.")
+        ContentReleaseInfo(startDate = "2024", status = "ongoing", totalEpisode = "2")
         ListOfCategory(category = listOf("Action", "Horror", "Comedy", "Drama"))
+        WatchNowButton()
 
     }
 }
 
+@Composable
+fun WatchNowButton(modifier: Modifier=Modifier){
+    Button(
+        onClick = { /*TODO*/ },
+        colors = ButtonDefaults.buttonColors(Blue),
+        modifier = modifier.fillMaxWidth()
+            .padding(10.dp)
+    ) {
+        Row {
+            Icon(
+                imageVector = Icons.Filled.PlayArrow,
+                contentDescription = null
+            )
+            Text(text = "Watch Now")
+        }
+    }
+}
+
+@Composable
+fun ContentReleaseInfo(
+    startDate: String,
+    status: String,
+    totalEpisode: String,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier.padding(start = 10.dp, top = 10.dp)) {
+        ContentReleaseText(textHint = "Start Date:", textDisplay = startDate)
+        ContentReleaseText(textHint = "Status:", textDisplay = status)
+        ContentReleaseText(textHint = "Total Episode:", textDisplay = totalEpisode)
+    }
+}
+
+@Composable
+fun ContentReleaseText(textHint: String, textDisplay: String, modifier: Modifier = Modifier) {
+    Row(modifier = modifier) {
+        Text(text = textHint, color = Color.White)
+        Text(text = textDisplay, color = Color.White,modifier=Modifier.padding(start = 2.dp))
+
+    }
+}
 
 @Composable
 fun ListOfCategory(category: List<String>, modifier: Modifier = Modifier) {
@@ -87,7 +133,11 @@ fun ListOfCategory(category: List<String>, modifier: Modifier = Modifier) {
                     .background(color = Gray)
                     .padding(10.dp)
             ) {
-                Text(text = category[it], color = Color.White, style = MaterialTheme.typography.labelLarge)
+                Text(
+                    text = category[it],
+                    color = Color.White,
+                    style = MaterialTheme.typography.labelLarge
+                )
 
             }
         }
