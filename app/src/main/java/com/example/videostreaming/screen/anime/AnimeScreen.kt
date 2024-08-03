@@ -1,6 +1,7 @@
 package com.example.videostreaming.screen.anime
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,15 +26,19 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.videostreaming.R
+import com.example.videostreaming.route.Route
 import com.example.videostreaming.screen.component.CustomImageSwitcher
 import com.example.videostreaming.screen.model.Content
 import com.example.videostreaming.ui.theme.Black
 import com.example.videostreaming.ui.theme.VideoStreamingTheme
 
 @Composable
-fun AnimeScreen(modifier: Modifier = Modifier) {
+fun AnimeScreen(navController: NavController,modifier: Modifier = Modifier) {
+
     val viewModel: AnimeViewModel = viewModel()
     val recentEpisodes by viewModel.recentEpisodes.collectAsState()
     val topAiringEpisodes by viewModel.topAiringEpisodes.collectAsState()
@@ -54,15 +59,9 @@ fun AnimeScreen(modifier: Modifier = Modifier) {
             modifier = Modifier.padding(start = 16.dp, bottom = 16.dp),
             style = MaterialTheme.typography.headlineLarge
         )
-        val list = listOf<Content>(
-            Content(title = "Demon Slayer", episodeNumber = R.drawable.demonslayer),
-            Content(title = "Demon Slayer", episodeNumber = R.drawable.demonslayer),
-            Content(title = "Demon Slayer", episodeNumber = R.drawable.demonslayer),
-            Content(title = "Demon Slayer", episodeNumber = R.drawable.demonslayer)
-        )
         LazyRow {
             items(topAiringEpisodes.size) { index ->
-                DisplayContentCard(content = topAiringEpisodes[index])
+                DisplayContentCard(navController,content = topAiringEpisodes[index])
             }
         }
 
@@ -71,9 +70,11 @@ fun AnimeScreen(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun DisplayContentCard(content: Content, modifier: Modifier = Modifier) {
+fun DisplayContentCard(navController: NavController,content: Content, modifier: Modifier = Modifier) {
     Card(
-        modifier = modifier.padding(start = 16.dp),
+        modifier = modifier.padding(start = 16.dp).clickable {
+            navController.navigate("content_info/${content.id}")
+        },
         shape = RoundedCornerShape(16.dp)
     ) {
         Box(
@@ -127,6 +128,6 @@ fun DisplayContentCard(content: Content, modifier: Modifier = Modifier) {
 @Composable
 fun AnimeScreenPreview() {
     VideoStreamingTheme {
-        AnimeScreen()
+//        AnimeScreen()
     }
 }

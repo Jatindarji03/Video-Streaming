@@ -2,7 +2,6 @@ package com.example.videostreaming.screen.contentnfo
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -31,62 +30,73 @@ import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.example.videostreaming.R
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.videostreaming.ui.theme.Black
 import com.example.videostreaming.ui.theme.Blue
 import com.example.videostreaming.ui.theme.Gray
 import com.example.videostreaming.ui.theme.VideoStreamingTheme
 
 @Composable
-fun ContentInfoScreen(modifier: Modifier = Modifier) {
+fun ContentInfoScreen(id: String?, modifier: Modifier = Modifier) {
+    val viewModel: ContentInfoViewModel = viewModel(factory = ContentInfoViewModelFactory(id!!))
+    val contentInfo by viewModel.contentInfo.collectAsState()
     var checked by remember {
         mutableStateOf(false)
     }
     val state = rememberScrollState()
+
     Column(
         modifier = modifier
             .background(Black)
             .fillMaxSize()
             .verticalScroll(state),
     ) {
-        MovieImageCard()
+        MovieImageCard(contentInfo?.image)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            MovieName(title = "Interstellar")
+            contentInfo?.let { MovieName(title = it.title) }
             LikeButton(checked = checked, onCheckedChange = { checked = it })
         }
-        SubOrDub(text = "Dub")
-        ContentInformation(information = "In 2067, humanity faces extinction due to a global blight. Joseph Cooper, a former NASA test pilot, along with his son and daughter, Tom and Murph, and father-in-law Donald, toil as farmers. One evening during a dust storm, Cooper and Murph discover mysterious patterns in falling particles. Decoding the patterns leads them to a secret NASA facility run by scientist Dr. John Brand. Cooper is enlisted to pilot the spaceship Endurance through a newly-discovered wormhole near Saturn, searching for habitable planets. Cooper struggles with leaving his children behind but decides to do it in the hope of saving Tom and Murph's generation from extinction. He promises Murph he will return, but she is distraught. Cooper joins the Endurance team, consisting of Romilly, Doyle, Brand's daughter Amelia, and the robots TARS and CASE.")
-        ContentReleaseInfo(startDate = "2024", status = "ongoing", totalEpisode = "2")
-        ListOfCategory(category = listOf("Action", "Horror", "Comedy", "Drama"))
+        contentInfo?.let { SubOrDub(text = it.subOrDub) }
+        contentInfo?.let { ContentInformation(information = it.description) }
+        contentInfo?.let {
+            ContentReleaseInfo(
+                startDate = it.releaseDate,
+                status = it.status,
+                totalEpisode = it.totalEpisodes.toString()
+            )
+        }
+        contentInfo?.let { ListOfCategory(category = it.genres) }
         WatchNowButton()
+
 
     }
 }
 
 @Composable
-fun WatchNowButton(modifier: Modifier=Modifier){
+fun WatchNowButton(modifier: Modifier = Modifier) {
     Button(
         onClick = { /*TODO*/ },
         colors = ButtonDefaults.buttonColors(Blue),
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
             .padding(10.dp)
     ) {
         Row {
@@ -117,7 +127,7 @@ fun ContentReleaseInfo(
 fun ContentReleaseText(textHint: String, textDisplay: String, modifier: Modifier = Modifier) {
     Row(modifier = modifier) {
         Text(text = textHint, color = Color.White)
-        Text(text = textDisplay, color = Color.White,modifier=Modifier.padding(start = 2.dp))
+        Text(text = textDisplay, color = Color.White, modifier = Modifier.padding(start = 2.dp))
 
     }
 }
@@ -154,7 +164,8 @@ fun ContentInformation(information: String, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier
             .padding(start = 10.dp, end = 10.dp, top = 10.dp)
-            .clickable { isExpanded = !isExpanded },
+            .clickable { isExpanded = !isExpanded }
+            .fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(Gray),
         elevation = CardDefaults.cardElevation(4.dp)
@@ -200,12 +211,12 @@ fun SubOrDub(text: String, modifier: Modifier = Modifier) {
         text = text,
         color = Color.White,
         modifier = modifier.padding(start = 10.dp),
-        style = MaterialTheme.typography.labelLarge
+        style = MaterialTheme.typography.headlineMedium
     )
 }
 
 @Composable
-fun MovieImageCard(modifier: Modifier = Modifier) {
+fun MovieImageCard(imageUri: String? = null, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.padding(10.dp),
         shape = RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)
@@ -215,9 +226,9 @@ fun MovieImageCard(modifier: Modifier = Modifier) {
                 .fillMaxWidth()
                 .height(380.dp)
         ) {
-            Image(
+            AsyncImage(
                 modifier = Modifier.fillMaxSize(),
-                painter = painterResource(id = R.drawable.interstellar),
+                model = imageUri,
                 contentDescription = null,
                 contentScale = ContentScale.Crop
             )
@@ -231,8 +242,8 @@ fun MovieName(title: String, modifier: Modifier = Modifier) {
     Text(
         text = title,
         color = Color.White,
-        style = MaterialTheme.typography.displayLarge,
-        modifier = modifier
+        style = MaterialTheme.typography.displayMedium,
+        modifier = modifier.fillMaxWidth(0.9f)
     )
 }
 
@@ -264,6 +275,6 @@ fun LikeButton(
 @Composable
 fun ContentInfoScreenPreview() {
     VideoStreamingTheme {
-        ContentInfoScreen()
+//        ContentInfoScreen()
     }
 }

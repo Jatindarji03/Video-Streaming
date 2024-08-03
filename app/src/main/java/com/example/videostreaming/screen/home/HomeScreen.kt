@@ -21,8 +21,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.videostreaming.screen.anime.AnimeScreen
 import com.example.videostreaming.screen.comingsoon.ComingSoonScreen
 import com.example.videostreaming.ui.theme.Black
@@ -32,7 +34,7 @@ import com.example.videostreaming.ui.theme.VideoStreamingTheme
 
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier) {
+fun HomeScreen(navController: NavController,modifier: Modifier = Modifier) {
     val items = listOf("Anime", "Coming Soon")
     var selectedChipIndex by rememberSaveable {
         mutableIntStateOf(0)
@@ -51,7 +53,7 @@ fun HomeScreen(modifier: Modifier = Modifier) {
             ChipSection(chips = items, onChipSelected = { selectedChipIndex = it })
 
             when (selectedChipIndex) {
-                0 -> AnimeScreen()
+                0 -> AnimeScreen(navController)
                 1 -> ComingSoonScreen()
             }
         }
@@ -97,6 +99,6 @@ fun ChipSection(
 @Composable
 fun HomeScreensPreview() {
     VideoStreamingTheme {
-        HomeScreen()
+        //HomeScreen()
     }
 }
