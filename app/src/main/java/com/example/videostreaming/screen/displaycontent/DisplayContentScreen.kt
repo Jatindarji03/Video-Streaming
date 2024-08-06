@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,9 +22,12 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -32,10 +36,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.times
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
@@ -125,7 +131,12 @@ fun VideoContainer(videoUri: String, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     var isPlaying by remember { mutableStateOf(true) }
     var showButton by remember { mutableStateOf(true) }
-    val coroutineScope = rememberCoroutineScope() // Create CoroutineScope for launching coroutines
+    var showProgressBar by remember { mutableStateOf(true) }
+    var showTime by remember { mutableStateOf(true) }
+    var showFullScreenButton by remember { mutableStateOf(true) }
+    var currentPosition by remember { mutableLongStateOf(0L) }
+    var duration by remember { mutableLongStateOf(0L) }
+    val coroutineScope = rememberCoroutineScope()
 
     val exoPlayer = remember {
         ExoPlayer.Builder(context).build().apply {
@@ -142,11 +153,30 @@ fun VideoContainer(videoUri: String, modifier: Modifier = Modifier) {
         exoPlayer.playWhenReady = isPlaying
     }
 
-    // Coroutine to hide button after 5 seconds
+    // Update currentPosition and duration periodically
     LaunchedEffect(Unit) {
-        delay(5000)
-        showButton = false
+        while (true) {
+            delay(1000) // Update every second
+            currentPosition = exoPlayer.currentPosition
+            duration = exoPlayer.duration
+        }
     }
+
+    // Coroutine to hide UI elements after 5 seconds
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(5000)
+            if (!showButton) {
+                showProgressBar = false
+                showTime = false
+                showFullScreenButton = false
+            }
+        }
+    }
+
+    // Calculate formatted time
+    val currentTime = remember(currentPosition) { formatDuration(currentPosition) }
+    val formattedDuration = remember(duration) { formatDuration(duration) }
 
     Box(
         modifier = modifier
@@ -155,11 +185,17 @@ fun VideoContainer(videoUri: String, modifier: Modifier = Modifier) {
             .pointerInput(Unit) {
                 detectTapGestures(
                     onTap = {
-                        // Reset the button visibility timer
                         showButton = true
+                        showProgressBar = true
+                        showTime = true
+                        showFullScreenButton = true
                         coroutineScope.launch {
-                            delay(5000) // Hide button after 5 seconds of interaction
+                            delay(5000) // Hide UI elements after 5 seconds of interaction
                             showButton = false
+                            delay(500) // Short delay before hiding progress bar and time texts
+                            showProgressBar = false
+                            showTime = false
+                            showFullScreenButton = false
                         }
                     }
                 )
@@ -174,6 +210,24 @@ fun VideoContainer(videoUri: String, modifier: Modifier = Modifier) {
             },
             modifier = Modifier.fillMaxSize()
         )
+
+        // Display the fullscreen button at the top right corner
+        if (showFullScreenButton) {
+            IconButton(
+                onClick = { /* No action for now */ },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(3.dp)
+                    .size(64.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.fullscreen), // Use appropriate icon
+                    contentDescription = "Fullscreen",
+                    tint = Color.White,
+                    modifier = Modifier.size(40.dp)
+                )
+            }
+        }
 
         // Display the Button only if showButton is true
         if (showButton) {
@@ -195,11 +249,64 @@ fun VideoContainer(videoUri: String, modifier: Modifier = Modifier) {
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 ForwardButton(onClick = { exoPlayer.seekForward() })
+            }
+        }
 
+        // Display the current time and duration below the progress bar
+        if (showTime) {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+                    .fillMaxWidth()
+            ) {
+                // Progress Bar
+                if (showProgressBar) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(4.dp)
+                            .background(Color.Gray)
+                    ) {
+                        val progress =
+                            (currentPosition.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .width(
+                                    (progress * (LocalConfiguration.current.screenWidthDp.dp - 32.dp)).coerceAtLeast(
+                                        0.dp
+                                    )
+                                )
+                                .background(Color.Blue)
+                        )
+                    }
+                }
+
+                // Time Display
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = currentTime,
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                    Text(
+                        text = formattedDuration,
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
             }
         }
     }
 }
+
 
 @Composable
 fun BackwardButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -235,6 +342,14 @@ fun PlayPauseButton(isPlaying: Boolean, onClick: () -> Unit, modifier: Modifier 
             modifier = Modifier.size(40.dp)
         )
     }
+}
+
+// Function to format duration
+fun formatDuration(durationMs: Long): String {
+    val totalSeconds = durationMs / 1000
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return String.format("%02d:%02d", minutes, seconds)
 }
 //@Composable
 //fun DisplayVideo(uri: String, modifier: Modifier = Modifier) {
