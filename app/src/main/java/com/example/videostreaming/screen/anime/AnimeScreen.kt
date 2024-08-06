@@ -23,14 +23,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
-import com.example.videostreaming.R
-import com.example.videostreaming.route.Route
 import com.example.videostreaming.screen.component.CustomImageSwitcher
 import com.example.videostreaming.screen.model.Content
 import com.example.videostreaming.ui.theme.Black
@@ -52,7 +50,9 @@ fun AnimeScreen(navController: NavController,modifier: Modifier = Modifier) {
             .verticalScroll(state),
 
         ) {
-        CustomImageSwitcher(recentEpisodes)
+        CustomImageSwitcher(contentList = recentEpisodes, onClick = {
+            navController.navigate("content_info/${recentEpisodes[it].id}")
+        })
         Text(
             text = "Top Airing \uD83D\uDD25",
             color = Color.White,
@@ -128,6 +128,6 @@ fun DisplayContentCard(navController: NavController,content: Content, modifier: 
 @Composable
 fun AnimeScreenPreview() {
     VideoStreamingTheme {
-//        AnimeScreen()
+        AnimeScreen(NavController(LocalContext.current))
     }
 }

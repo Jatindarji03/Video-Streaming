@@ -82,5 +82,16 @@ dependencies {
     //Volley API
     implementation ("com.android.volley:volley:1.2.1")
 
+    //Exo Player
+//    implementation("com.google.android.exoplayer:exoplayer:2.18.0")
+    implementation("io.sanghun:compose-video:1.2.0")
+    implementation("androidx.media3:media3-exoplayer:1.1.0") // [Required] androidx.media3 ExoPlayer dependency
+    implementation("androidx.media3:media3-session:1.1.0") // [Required] MediaSession Extension dependency
+    implementation("androidx.media3:media3-ui:1.1.0") // [Required] Base Player UI
+    implementation ("androidx.media3:media3-exoplayer-hls:1.0.0")
+
+
+    implementation ("androidx.compose.material:material:1.4.0")
+
 
 }

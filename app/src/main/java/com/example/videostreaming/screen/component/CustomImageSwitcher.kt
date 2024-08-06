@@ -3,6 +3,7 @@ package com.example.videostreaming.screen.component
 import androidx.compose.foundation.ExperimentalFoundationApi
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,6 +37,7 @@ import com.example.videostreaming.ui.theme.Blue
 @Composable
 fun CustomImageSwitcher(
     contentList: List<Content>,
+    onClick:(Int)->Unit,
     modifier: Modifier = Modifier
 ) {
     val pagerState = rememberPagerState {
@@ -45,7 +47,8 @@ fun CustomImageSwitcher(
         val content = contentList[it]
         Card(
             modifier = Modifier
-                .padding(16.dp),
+                .padding(16.dp)
+                .clickable { onClick(it) },
             shape = RoundedCornerShape(16.dp)
         ) {
             Box(modifier = Modifier.height(400.dp)) {
@@ -86,7 +89,7 @@ fun CustomImageSwitcher(
                             modifier = Modifier.padding(bottom = 20.dp)
                         )
                         Button(
-                            onClick = { /*TODO*/ },
+                            onClick = { onClick(it) },
                             colors = ButtonDefaults.buttonColors(Blue),
                         ) {
                             Row {
