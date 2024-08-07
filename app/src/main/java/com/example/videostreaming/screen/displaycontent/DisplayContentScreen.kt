@@ -15,17 +15,22 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +39,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
@@ -43,6 +49,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultHttpDataSource
@@ -51,13 +58,20 @@ import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.ui.PlayerView
 import com.example.videostreaming.R
 import com.example.videostreaming.ui.theme.Black
+import com.example.videostreaming.ui.theme.Gray
 import com.example.videostreaming.ui.theme.VideoStreamingTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-fun DisplayContentScreen(modifier: Modifier = Modifier) {
+fun DisplayContentScreen(id: String?, modifier: Modifier = Modifier) {
+    val viewModel: DisplayContentViewModel =
+        viewModel(factory = DisplayContentViewModelFactory(id!!))
+    val contentInfo by viewModel.contentInfo.collectAsState()
     val state = rememberScrollState()
+    var isExpanded by remember {
+        mutableStateOf(false)
+    }
 
     Column(
         modifier = modifier
@@ -65,65 +79,103 @@ fun DisplayContentScreen(modifier: Modifier = Modifier) {
             .fillMaxSize()
             .verticalScroll(state)
     ) {
-//        DisplayVideo(
-//            uri = "https://www111.vipanicdn.net/streamhls/0789fd4f049c3ca2a49b860ea5d1f456/ep.1.1709225406.360.m3u8",
-//            modifier = Modifier
-//                .height(200.dp)
-//                .fillMaxWidth()
-//        )
         VideoContainer(
             videoUri = "https://www111.vipanicdn.net/streamhls/0789fd4f049c3ca2a49b860ea5d1f456/ep.1.1709225406.360.m3u8"
         )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            contentInfo?.let {
+                ContentTitle(
+                    title = it.title,
+                    modifier = Modifier
+                        .weight(1f)
+                        .align(Alignment.CenterVertically) // Allowing ContentTitle to take up available space
+                )
+            }
+            ExpendMoreLessButton(
+                isExpanded = isExpanded,
+                onCheckedChange = { isExpanded = !isExpanded })
+
+        }
+        ContentReleaseDate(releaseYear = "2022")
+        if (isExpanded) {
+            contentInfo?.let {
+                ContentRelatedInfo(
+                    status = it.status,
+                    type = it.type,
+                    totalEpisode = it.totalEpisodes.toString()
+                )
+            }
+            contentInfo?.let { ContentDescription(description = it.description) }
+        }
     }
 
 }
 
-@OptIn(UnstableApi::class)
 @Composable
-fun Video(uri: String, onFullscreenToggle: (Boolean) -> Unit, modifier: Modifier = Modifier) {
-    var isFullscreen by remember { mutableStateOf(false) }
-    Box(
+fun ContentDescription(description: String, modifier: Modifier = Modifier) {
+    Card(
         modifier = modifier
-            .background(Color.Black)
-            .height(200.dp)
-            .fillMaxWidth()
+            .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(10.dp),
+        colors = CardDefaults.cardColors(Gray),
+        elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        AndroidView(
-            factory = { context ->
-                PlayerView(context).apply {
-                    useController = false
-                    val exoPlayer = ExoPlayer.Builder(context).build().also { player ->
-                        val mediaSource = HlsMediaSource.Factory(DefaultHttpDataSource.Factory())
-                            .createMediaSource(MediaItem.fromUri(uri))
-                        player.setMediaSource(mediaSource)
-                        player.prepare()
-                        player.playWhenReady = true
-                    }
-                    this.player = exoPlayer
-                }
-            },
-            modifier = Modifier.fillMaxSize()
+        Text(
+            text = description,
+            modifier = Modifier.padding(5.dp),
+            style = MaterialTheme.typography.bodyLarge,
+            color = Color.White
         )
 
-        IconButton(
-            onClick = {
-                isFullscreen = !isFullscreen
-                onFullscreenToggle(isFullscreen)
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(8.dp)
+    }
+}
+
+@Composable
+fun ContentRelatedInfo(
+    status: String,
+    type: String,
+    totalEpisode: String,
+    modifier: Modifier = Modifier
+) {
+    LazyRow(modifier = modifier.padding(10.dp)) {
+        items(1) {
+            ContentInfoContainer(hint = "Status", value = status)
+            ContentInfoContainer(hint = "Type", value = type)
+            ContentInfoContainer(hint = "Total Episode", value = totalEpisode)
+
+        }
+    }
+
+}
+
+@Composable
+fun ContentInfoContainer(hint: String, value: String, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .padding(top = 10.dp, bottom = 10.dp, end = 10.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(Gray)
+            .padding(10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier.padding(2.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.Start
         ) {
-            Icon(
-                imageVector = if (isFullscreen) Icons.Filled.ThumbUp else Icons.Filled.Search,
-                contentDescription = if (isFullscreen) "Exit Fullscreen" else "Fullscreen",
-                tint = Color.White
-            )
+            Text(text = hint, style = MaterialTheme.typography.labelLarge, color = Color.White)
+            Text(text = value, style = MaterialTheme.typography.headlineSmall, color = Color.White)
         }
 
     }
-
 }
+
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -351,6 +403,48 @@ fun formatDuration(durationMs: Long): String {
     val seconds = totalSeconds % 60
     return String.format("%02d:%02d", minutes, seconds)
 }
+
+@Composable
+fun ContentTitle(title: String, modifier: Modifier = Modifier) {
+    Text(
+        text = title,
+        color = Color.White,
+        style = MaterialTheme.typography.displayMedium,
+        modifier = modifier.fillMaxWidth(0.9f)
+    )
+}
+
+@Composable
+fun ExpendMoreLessButton(
+    isExpanded: Boolean,
+    onCheckedChange: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    IconButton(
+        modifier = modifier,
+        onClick = onCheckedChange
+    ) {
+        Icon(
+            modifier = Modifier.height(100.dp),
+            imageVector = if (isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+            contentDescription = null,
+            tint = Color.White
+        )
+    }
+
+}
+
+@Composable
+fun ContentReleaseDate(releaseYear: String, modifier: Modifier = Modifier) {
+    Text(
+        text = releaseYear,
+        style = MaterialTheme.typography.displaySmall,
+        color = Color.White,
+        modifier = modifier.padding(start = 10.dp, end = 10.dp)
+    )
+}
+
+
 //@Composable
 //fun DisplayVideo(uri: String, modifier: Modifier = Modifier) {
 //    val context = LocalContext.current
@@ -378,6 +472,6 @@ fun formatDuration(durationMs: Long): String {
 @Composable
 fun DisplayContentScreenPreview() {
     VideoStreamingTheme {
-        DisplayContentScreen()
+        DisplayContentScreen("1")
     }
 }

@@ -8,5 +8,6 @@ enum class Route(val route:String) {
     Favourites("favourites"),
     Search("search"),
     Profile("profile"),
-    ContentInfo("content_info/{id}")
+    ContentInfo("content_info/{id}"),
+    DisplayContent("display_content/id")
 }

@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.videostreaming.route.Route
+import com.example.videostreaming.screen.displaycontent.DisplayContentScreen
 import com.example.videostreaming.screen.favourite.FavouriteScreen
 import com.example.videostreaming.screen.home.HomeScreen
 
@@ -42,7 +43,7 @@ fun VideoStreamingApp() {
             SignupScreen(navController)
         }
         composable(Route.Main.name){
-            MainScreen()
+           MainScreen()
         }
 
     }

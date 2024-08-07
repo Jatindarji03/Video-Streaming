@@ -50,7 +50,7 @@ import com.example.videostreaming.ui.theme.Gray
 import com.example.videostreaming.ui.theme.VideoStreamingTheme
 
 @Composable
-fun ContentInfoScreen(id: String?, modifier: Modifier = Modifier) {
+fun ContentInfoScreen(id: String?, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val viewModel: ContentInfoViewModel = viewModel(factory = ContentInfoViewModelFactory(id!!))
     val contentInfo by viewModel.contentInfo.collectAsState()
     var checked by remember {
@@ -84,16 +84,16 @@ fun ContentInfoScreen(id: String?, modifier: Modifier = Modifier) {
             )
         }
         contentInfo?.let { ListOfCategory(category = it.genres) }
-        WatchNowButton()
+        WatchNowButton(onClick)
 
 
     }
 }
 
 @Composable
-fun WatchNowButton(modifier: Modifier = Modifier) {
+fun WatchNowButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Button(
-        onClick = { /*TODO*/ },
+        onClick = { onClick() },
         colors = ButtonDefaults.buttonColors(Blue),
         modifier = modifier
             .fillMaxWidth()

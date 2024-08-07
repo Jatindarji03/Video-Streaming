@@ -5,9 +5,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.videostreaming.route.Route
-import com.example.videostreaming.screen.anime.AnimeScreen
-import com.example.videostreaming.screen.comingsoon.ComingSoonScreen
 import com.example.videostreaming.screen.contentnfo.ContentInfoScreen
+import com.example.videostreaming.screen.displaycontent.DisplayContentScreen
 import com.example.videostreaming.screen.favourite.FavouriteScreen
 import com.example.videostreaming.screen.home.HomeScreen
 import com.example.videostreaming.screen.profile.ProfileScreen
@@ -28,9 +27,15 @@ fun BottomNavGraph(navController: NavHostController) {
         composable(Route.Profile.name) {
             ProfileScreen()
         }
-        composable(Route.ContentInfo.route){ backStackEntry ->
+        composable(Route.ContentInfo.route) { backStackEntry ->
             val id = backStackEntry.arguments?.getString("id")
-            ContentInfoScreen(id)
+            ContentInfoScreen(id, onClick = {
+                navController.navigate("display_content/$id")
+            })
+        }
+        composable("display_content/{id}") { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id")
+            DisplayContentScreen(id = id)
         }
 
     }
