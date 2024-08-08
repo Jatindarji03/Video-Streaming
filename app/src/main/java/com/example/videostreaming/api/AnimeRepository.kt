@@ -8,5 +8,6 @@ class AnimeRepository {
 
     suspend fun getContentInfo(contentId: String) = RetrofitInstance.api.getContentInfo(contentId)
 
+    suspend fun getEpisodeUrl(episodeId: String) = RetrofitInstance.api.getEpisodeUrl(episodeId)
 
 }
