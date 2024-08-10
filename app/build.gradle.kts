@@ -92,6 +92,4 @@ dependencies {
 
 
     implementation ("androidx.compose.material:material:1.4.0")
-
-
 }

@@ -1,5 +1,6 @@
 package com.example.videostreaming.screen.anime
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.videostreaming.api.AnimeRepository
@@ -30,7 +31,7 @@ class AnimeViewModel : ViewModel() {
                 val response = repository.getRecentEpisodes()
                 _recentEpisodes.value = response.results
             } catch (e: Exception) {
-
+                Log.e("AnimeViewModel", "Error fetching recent episodes: ${e.message}")
             }
         }
     }

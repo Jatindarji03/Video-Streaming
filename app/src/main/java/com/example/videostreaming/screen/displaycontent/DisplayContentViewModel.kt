@@ -1,5 +1,6 @@
 package com.example.videostreaming.screen.displaycontent
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.videostreaming.api.AnimeRepository
@@ -9,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.time.delay
 
 class DisplayContentViewModel(contentId: String) : ViewModel() {
     private val repository = AnimeRepository()
@@ -28,12 +30,24 @@ class DisplayContentViewModel(contentId: String) : ViewModel() {
     private fun fetchContentInfo(contentId: String) {
         viewModelScope.launch {
             try {
-                _contentInfo.value = repository.getContentInfo(contentId)
-                _episodeUrl.value=repository.getEpisodeUrl(_contentInfo.value!!.episodes.firstOrNull()?.id!!)
-
-
+                val info = repository.getContentInfo(contentId)
+                _contentInfo.value = info
+                // Optionally fetch the URL for the first episode if needed
+                info.episodes.firstOrNull()?.id?.let { episodeId ->
+                    fetchEpisodeUrl(episodeId)
+                }
             } catch (e: Exception) {
+                Log.e("DisplayContentViewModel", "Error fetching content info: ${e.message}")
+            }
+        }
+    }
+    fun fetchEpisodeUrl(episodeId: String) {
+        viewModelScope.launch {
+            try {
 
+                _episodeUrl.value = repository.getEpisodeUrl(episodeId)
+            } catch (e: Exception) {
+                Log.e("DisplayContentViewModel", "Error fetching episode URL: ${e.message}")
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.example.videostreaming.screen.anime
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -50,6 +51,7 @@ fun AnimeScreen(navController: NavController,modifier: Modifier = Modifier) {
             .verticalScroll(state),
 
         ) {
+        Log.d("AnimeScreen", "Recent Episodes: $recentEpisodes")
         CustomImageSwitcher(contentList = recentEpisodes, onClick = {
             navController.navigate("content_info/${recentEpisodes[it].id}")
         })

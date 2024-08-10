@@ -1,5 +1,6 @@
     package com.example.videostreaming.screen.displaycontent
 
+    import android.util.Log
     import androidx.annotation.OptIn
     import androidx.compose.foundation.Image
     import androidx.compose.foundation.background
@@ -72,17 +73,12 @@
 
     @Composable
     fun DisplayContentScreen(id: String?, modifier: Modifier = Modifier) {
-        val viewModel: DisplayContentViewModel =
-            viewModel(factory = DisplayContentViewModelFactory(id!!))
+        val viewModel: DisplayContentViewModel = viewModel(factory = DisplayContentViewModelFactory(id!!))
         val contentInfo by viewModel.contentInfo.collectAsState()
         val episodeUrl by viewModel.episodeUrl.collectAsState()
 
-        var isExpanded by remember {
-            mutableStateOf(false)
-        }
-
+        var isExpanded by remember { mutableStateOf(false) }
         var selectedEpisodeIndex by remember { mutableIntStateOf(0) } // Track selected episode index
-
 
         Column(
             modifier = modifier
@@ -90,8 +86,8 @@
                 .fillMaxSize()
         ) {
             // Fixed Video Container
-            episodeUrl?.sources?.first()?.let {
-                VideoContainer(videoUri = it.url)
+            episodeUrl?.sources?.first()?.let { videoUrl ->
+                VideoContainer(videoUri = videoUrl.url)
             }
 
             // Scrollable Content
@@ -159,13 +155,21 @@
                                 isSelected = selectedEpisodeIndex == index,
                                 onClick = {
                                     selectedEpisodeIndex = index
-                                    // Handle episode click
+
+                                        val episodeId = info.episodes[selectedEpisodeIndex].id
+                                        viewModel.fetchEpisodeUrl(episodeId)
+                                    // Removed the log statement here
                                 }
                             )
                         }
                     }
                 }
             }
+        }
+
+        // Observe URL changes
+        LaunchedEffect(episodeUrl) {
+            Log.d("episodeUrl", "URL : ${episodeUrl?.sources?.first()?.url}")
         }
     }
 
@@ -244,24 +248,24 @@
         var duration by remember { mutableLongStateOf(0L) }
         val coroutineScope = rememberCoroutineScope()
 
-        val exoPlayer = remember {
-            ExoPlayer.Builder(context).build().apply {
-                val mediaSource = HlsMediaSource.Factory(DefaultHttpDataSource.Factory())
-                    .createMediaSource(MediaItem.fromUri(videoUri))
-                setMediaSource(mediaSource)
-                prepare()
-                playWhenReady = isPlaying
-            }
-        }
+        // State to hold ExoPlayer instance
+        val exoPlayer = remember { ExoPlayer.Builder(context).build() }
 
-
-        // Clean up ExoPlayer when the composable is removed
+        // Dispose of ExoPlayer when the composable is removed
         DisposableEffect(Unit) {
             onDispose {
                 exoPlayer.release()
             }
         }
 
+        // Update ExoPlayer when videoUri changes
+        LaunchedEffect(videoUri) {
+            val mediaSource = HlsMediaSource.Factory(DefaultHttpDataSource.Factory())
+                .createMediaSource(MediaItem.fromUri(videoUri))
+            exoPlayer.setMediaSource(mediaSource)
+            exoPlayer.prepare()
+            exoPlayer.playWhenReady = isPlaying
+        }
 
         // Update playWhenReady based on isPlaying
         LaunchedEffect(isPlaying) {
@@ -421,6 +425,7 @@
             }
         }
     }
+
 
 
     @Composable
