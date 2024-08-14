@@ -43,7 +43,7 @@ fun VideoStreamingApp() {
             SignupScreen(navController)
         }
         composable(Route.Main.name){
-           MainScreen()
+            MainScreen()
         }
 
     }
