@@ -53,20 +53,30 @@ fun MainScreen(
     modifier: Modifier = Modifier
 ) {
     val navController = rememberNavController()
+    // Define the routes where the bottom navigation should be visible
+    val bottomNavRoutes = listOf(
+        Route.Home.name,
+        Route.Favourites.name,
+        Route.Search.name,
+        Route.Profile.name
+    )
 
     Scaffold(
         modifier = modifier,
         containerColor = Black,
         bottomBar = {
-            BottomBar(navController)
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentDestination = navBackStackEntry?.destination?.route
+
+            // Show BottomBar only for the main screens
+            if (currentDestination in bottomNavRoutes) {
+                BottomBar(navController)
+            }
         }
     ) { innerPadding ->
-        // Add content here and respect the innerPadding
         Box(modifier = Modifier.padding(innerPadding)) {
-            // Your screen content goes here
             BottomNavGraph(navController)
         }
-
     }
 }
 

@@ -1,6 +1,9 @@
 package com.example.videostreaming.screen.displaycontent
 
+import android.app.Activity
+import android.content.pm.ActivityInfo
 import android.util.Log
+import android.view.ViewGroup
 import androidx.annotation.OptIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -50,11 +53,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
@@ -254,17 +260,14 @@ fun VideoContainer(videoUri: String, modifier: Modifier = Modifier) {
     val density = LocalDensity.current.density
     val screenHeight = with(density) { configuration.screenHeightDp.dp }
 
-    // State to hold ExoPlayer instance
     val exoPlayer = remember { ExoPlayer.Builder(context).build() }
 
-    // Dispose of ExoPlayer when the composable is removed
     DisposableEffect(Unit) {
         onDispose {
             exoPlayer.release()
         }
     }
 
-    // Update ExoPlayer when videoUri changes
     LaunchedEffect(videoUri) {
         val mediaSource = HlsMediaSource.Factory(DefaultHttpDataSource.Factory())
             .createMediaSource(MediaItem.fromUri(videoUri))
@@ -273,21 +276,18 @@ fun VideoContainer(videoUri: String, modifier: Modifier = Modifier) {
         exoPlayer.playWhenReady = isPlaying
     }
 
-    // Update playWhenReady based on isPlaying
     LaunchedEffect(isPlaying) {
         exoPlayer.playWhenReady = isPlaying
     }
 
-    // Update currentPosition and duration periodically
     LaunchedEffect(Unit) {
         while (true) {
-            delay(1000) // Update every second
+            delay(1000)
             currentPosition = exoPlayer.currentPosition
             duration = exoPlayer.duration
         }
     }
 
-    // Coroutine to hide UI elements after 5 seconds
     LaunchedEffect(Unit) {
         while (true) {
             delay(5000)
@@ -299,16 +299,33 @@ fun VideoContainer(videoUri: String, modifier: Modifier = Modifier) {
         }
     }
 
-    // Calculate formatted time
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(isFullScreen) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_START && isFullScreen) {
+                (context as? Activity)?.requestedOrientation =
+                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            } else if (event == Lifecycle.Event.ON_STOP) {
+                (context as? Activity)?.requestedOrientation =
+                    ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            (context as? android.app.Activity)?.requestedOrientation =
+                ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+    }
+
     val currentTime = remember(currentPosition) { formatDuration(currentPosition) }
     val formattedDuration = remember(duration) { formatDuration(duration) }
 
-
-    //This is Root Container of box
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(if(isFullScreen) screenHeight else 200.dp)
+            .height(if (isFullScreen) screenHeight else 200.dp)
             .pointerInput(Unit) {
                 detectTapGestures(
                     onTap = {
@@ -317,9 +334,9 @@ fun VideoContainer(videoUri: String, modifier: Modifier = Modifier) {
                         showTime = true
                         showFullScreenButton = true
                         coroutineScope.launch {
-                            delay(5000) // Hide UI elements after 5 seconds of interaction
+                            delay(5000)
                             showButton = false
-                            delay(500) // Short delay before hiding progress bar and time texts
+                            delay(500)
                             showProgressBar = false
                             showTime = false
                             showFullScreenButton = false
@@ -331,14 +348,17 @@ fun VideoContainer(videoUri: String, modifier: Modifier = Modifier) {
         AndroidView(
             factory = { context ->
                 PlayerView(context).apply {
-                    useController = false // Hide default controls
+                    useController = false
                     this.player = exoPlayer
+                    layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
                 }
             },
             modifier = Modifier.fillMaxSize()
         )
 
-        // Display the fullscreen button at the top right corner
         if (showFullScreenButton) {
             FullScreenButton(
                 isFullScreen = isFullScreen,
@@ -348,23 +368,8 @@ fun VideoContainer(videoUri: String, modifier: Modifier = Modifier) {
                     .padding(3.dp)
                     .size(64.dp)
             )
-//            IconButton(
-//                onClick = { /* No action for now */ },
-//                modifier = Modifier
-//                    .align(Alignment.TopEnd)
-//                    .padding(3.dp)
-//                    .size(64.dp)
-//            ) {
-//                Icon(
-//                    painter = painterResource(id = R.drawable.fullscreen), // Use appropriate icon
-//                    contentDescription = "Fullscreen",
-//                    tint = Color.White,
-//                    modifier = Modifier.size(40.dp)
-//                )
-//            }
         }
 
-        // Display the Button only if showButton is true
         if (showButton) {
             Row(
                 modifier = Modifier
@@ -387,7 +392,6 @@ fun VideoContainer(videoUri: String, modifier: Modifier = Modifier) {
             }
         }
 
-        // Display the current time and duration below the progress bar
         if (showTime) {
             Column(
                 modifier = Modifier
@@ -395,7 +399,6 @@ fun VideoContainer(videoUri: String, modifier: Modifier = Modifier) {
                     .padding(16.dp)
                     .fillMaxWidth()
             ) {
-                // Progress Bar
                 if (showProgressBar) {
                     Box(
                         modifier = Modifier
@@ -418,7 +421,6 @@ fun VideoContainer(videoUri: String, modifier: Modifier = Modifier) {
                     }
                 }
 
-                // Time Display
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
