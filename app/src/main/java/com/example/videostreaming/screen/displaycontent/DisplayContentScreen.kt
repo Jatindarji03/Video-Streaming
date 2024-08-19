@@ -1,7 +1,9 @@
 package com.example.videostreaming.screen.displaycontent
 
 import android.app.Activity
+import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.net.Uri
 import android.util.Log
 import android.view.ViewGroup
 import androidx.annotation.OptIn
@@ -12,6 +14,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -27,12 +30,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -70,6 +79,7 @@ import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
 import com.example.videostreaming.R
+import com.example.videostreaming.screen.model.EpisodeResponse
 import com.example.videostreaming.ui.theme.Black
 import com.example.videostreaming.ui.theme.Blue
 import com.example.videostreaming.ui.theme.Gray
@@ -80,25 +90,46 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun DisplayContentScreen(id: String?, modifier: Modifier = Modifier) {
+
+    val context = LocalContext.current
+    // Ensure this is within a Composable context
     val viewModel: DisplayContentViewModel =
         viewModel(factory = DisplayContentViewModelFactory(id!!))
+
+    // Collect state within a composable
     val contentInfo by viewModel.contentInfo.collectAsState()
     val episodeUrl by viewModel.episodeUrl.collectAsState()
 
     var isExpanded by remember { mutableStateOf(false) }
-    var selectedEpisodeIndex by remember { mutableIntStateOf(0) } // Track selected episode index
+    var selectedEpisodeIndex by remember { mutableIntStateOf(0) }
+
+    var showSheet by remember { mutableStateOf(false) }
+
+    var isVideoPlaying by remember { mutableStateOf(true) }  // State to control video playback
+
+    var currentVideoUrl by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(episodeUrl) {
+        currentVideoUrl = episodeUrl?.sources?.first()?.url
+        Log.d("episodeUri", "Uri  $currentVideoUrl")
+    }
+
+    if (showSheet) {
+        BottomSheet(episodeUrl,
+            onQualityChanged = {
+                currentVideoUrl = it
+            }, onDismiss = { showSheet = false })
+    }
 
     Column(
         modifier = modifier
             .background(Black)
             .fillMaxSize()
     ) {
-        // Fixed Video Container
-        episodeUrl?.sources?.first()?.let { videoUrl ->
-            VideoContainer(videoUri = videoUrl.url)
+        currentVideoUrl?.let { videoUrl ->
+            VideoContainer(videoUri = videoUrl, onPause = { isVideoPlaying = false })
         }
 
-        // Scrollable Content
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -107,9 +138,8 @@ fun DisplayContentScreen(id: String?, modifier: Modifier = Modifier) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 10.dp) // Add padding to avoid overlap with video container
+                    .padding(top = 10.dp)
             ) {
-                // Title and Expand Button
                 item {
                     Row(
                         modifier = Modifier
@@ -132,12 +162,10 @@ fun DisplayContentScreen(id: String?, modifier: Modifier = Modifier) {
                     }
                 }
 
-                // Release Date
                 item {
                     contentInfo?.let { ContentReleaseDate(releaseYear = it.releaseDate) }
                 }
 
-                // Expandable Sections
                 if (isExpanded) {
                     contentInfo?.let {
                         item {
@@ -152,8 +180,40 @@ fun DisplayContentScreen(id: String?, modifier: Modifier = Modifier) {
                         }
                     }
                 }
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 5.dp, bottom = 5.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        CustomButton(
+                            hint = "360 P",
+                            icon = R.drawable.quailty,
+                            onClick = { showSheet = true },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 20.dp) // Ensure the button takes equal width
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))  // Add spacing between the buttons
+                        CustomButton(
+                            hint = "Download",
+                            icon = R.drawable.download,
+                            onClick = {
+                                isVideoPlaying = false
+                                val intent =
+                                    Intent(Intent.ACTION_VIEW, Uri.parse(episodeUrl?.download))
+                                context.startActivity(intent)
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 20.dp) // Ensure the button takes equal width
+                        )
+                    }
 
-                // Episodes List
+                }
+
+
                 contentInfo?.let { info ->
                     items(info.totalEpisodes) { index ->
                         EpisodeContainer(
@@ -163,10 +223,8 @@ fun DisplayContentScreen(id: String?, modifier: Modifier = Modifier) {
                             isSelected = selectedEpisodeIndex == index,
                             onClick = {
                                 selectedEpisodeIndex = index
-
                                 val episodeId = info.episodes[selectedEpisodeIndex].id
                                 viewModel.fetchEpisodeUrl(episodeId)
-                                // Removed the log statement here
                             }
                         )
                     }
@@ -175,9 +233,127 @@ fun DisplayContentScreen(id: String?, modifier: Modifier = Modifier) {
         }
     }
 
-    // Observe URL changes
-    LaunchedEffect(episodeUrl) {
-        Log.d("episodeUrl", "URL : ${episodeUrl?.sources?.first()?.url}")
+}
+
+@kotlin.OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BottomSheet(
+    episodeUri: EpisodeResponse?,
+    onDismiss: () -> Unit,
+    onQualityChanged: (String) -> Unit
+) {
+    val modalBottomSheetState = rememberModalBottomSheetState()
+    ModalBottomSheet(
+        onDismissRequest = { onDismiss() },
+        sheetState = modalBottomSheetState,
+        dragHandle = { BottomSheetDefaults.DragHandle() },
+        containerColor = Color.DarkGray
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxWidth()  // Make sure the Column fills the width
+                .padding(vertical = 7.dp)
+        ) {
+            // Ensure each button stretches across the width
+            QualityChangeButton(
+                hint = "1080p",
+                onClick = {
+                    episodeUri?.sources?.get(3)?.url?.let { onQualityChanged(it) }
+                    onDismiss()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))  // Add spacing between buttons
+            QualityChangeButton(
+                hint = "720p",
+                onClick = {
+                    episodeUri?.sources?.get(2)?.url?.let { onQualityChanged(it) }
+                    onDismiss()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))  // Add spacing between buttons
+            QualityChangeButton(
+                hint = "480p",
+                onClick = {
+                    episodeUri?.sources?.get(1)?.url?.let { onQualityChanged(it) }
+                    onDismiss()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))  // Add spacing between buttons
+            QualityChangeButton(
+                hint = "360p",
+                onClick = {
+                    episodeUri?.sources?.first()?.url?.let { onQualityChanged(it) }
+                    onDismiss()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun QualityChangeButton(hint: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Button(
+        onClick = onClick, colors = ButtonDefaults.buttonColors(
+            containerColor = Blue,
+            contentColor = Black
+        ),
+        shape = RoundedCornerShape(8.dp),  // Square shape
+        contentPadding = PaddingValues(
+            horizontal = 16.dp,
+            vertical = 12.dp
+        ),  // Adjust padding as needed
+        modifier = modifier
+    ) {
+        Text(
+            text = hint,
+            style = MaterialTheme.typography.labelLarge
+        )
+    }
+}
+
+@Composable
+fun CustomButton(
+    hint: String,
+    icon: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Blue,
+            contentColor = Black
+        ),
+        shape = RoundedCornerShape(8.dp),  // Square shape
+        contentPadding = PaddingValues(
+            horizontal = 16.dp,
+            vertical = 12.dp
+        ),  // Adjust padding as needed
+        modifier = modifier
+    ) {
+        Icon(
+            painter = painterResource(id = icon),
+            contentDescription = null,
+            modifier = Modifier.size(24.dp)  // Adjust icon size as needed
+        )
+        Spacer(modifier = Modifier.width(12.dp))  // Increased space between icon and text
+        Text(
+            text = hint,
+            style = MaterialTheme.typography.labelLarge
+        )
     }
 }
 
@@ -245,7 +421,7 @@ fun ContentInfoContainer(hint: String, value: String, modifier: Modifier = Modif
 
 @OptIn(UnstableApi::class)
 @Composable
-fun VideoContainer(videoUri: String, modifier: Modifier = Modifier) {
+fun VideoContainer(videoUri: String, onPause: () -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     var isPlaying by remember { mutableStateOf(true) }
     var isFullScreen by remember { mutableStateOf(false) }
@@ -278,6 +454,13 @@ fun VideoContainer(videoUri: String, modifier: Modifier = Modifier) {
 
     LaunchedEffect(isPlaying) {
         exoPlayer.playWhenReady = isPlaying
+    }
+
+    // Call the onPause callback when the video is paused
+    LaunchedEffect(isPlaying) {
+        if (!isPlaying) {
+            onPause()
+        }
     }
 
     LaunchedEffect(Unit) {
